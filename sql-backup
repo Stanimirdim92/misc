@@ -1,0 +1,33 @@
+#!/bin/bash
+
+NOW=`date +%Y-%m-%d`
+
+### MySQL Setup ###
+MUSER="username" 
+MPASS="password"
+DBS=("db1" "db2")
+
+### EMAIL
+EMAILID="example@google.com"
+
+### Start MySQL Backup ###
+attempts=0
+for db in "${DBS[@]}"
+do
+    attempts=`expr $attempts + 1`
+    FILE="$SDIR"/mysql-"$db"."$NOW".sql.gz
+    mysqldump --single-transaction -q -u "$MUSER" -p"$MPASS" "$db" | gzip -9 > "$FILE"
+    cp "$FILE" /path/to/loca/folder
+    if [ $? -ne 0 ]
+    then
+        echo "Backing up $FILE failed" | mail -s "Backups ERROR with code $?" "$EMAILID"
+    fi
+done
+
+### Clean local backup dir
+rm /home/backup/*.sql.gz
+
+### Mounting disk - cifs -> apt-get install cif-utils
+#mount -t cifs //1.1.1.1/Path /path/backup -o username=username
+
+
